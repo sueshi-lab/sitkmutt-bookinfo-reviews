@@ -1,28 +1,47 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: bookinfo-dev-reviews
-  namespace: student23-bookinfo-dev
+  name: {{ .Release.Name }}
+  namespace: {{ .Values.reviews.namespace }}
   labels:
-    app: bookinfo-dev-reviews
+    app: {{ .Release.Name }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: bookinfo-dev-reviews
+      app: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: bookinfo-dev-reviews
+        app: {{ .Release.Name }}
     spec:
       containers:
-      - name: bookinfo-dev-reviews
-        image: ghcr.io/sueshi-lab/bookinfo-reviews:dev
+      - name: {{ .Release.Name }}
+        image: {{ .Values.reviews.image }}:{{ .Values.reviews.tag }}
         imagePullPolicy: Always
+        
+        {{- if or (.Values.extraEnv) (.Values.extraEnvSecret) }}
+
         env:
-        - name: ENABLE_RATINGS
-          value: "true"
-        - name: RATINGS_SERVICE
-          value: "http://sitkmutt.bookinfo.dev.opsta.net/student23/ratings"
+        {{- if .Values.extraEnv }}
+        {{- range $key, $value := .Values.extraEnv }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+        {{- end }}
+
+        {{- if .Values.extraEnvSecret }}
+        {{- range $key, $value := .Values.extraEnvSecret }}
+        {{- range $secretName, $secretValue := $value }}
+        - name: {{ $key }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ $secretName }}
+              key: {{ $secretValue | quote }}
+        {{- end }}
+        {{- end }}
+        {{- end }}
+
+        {{- end }}
       imagePullSecrets:
-      - name: registry-bookinfo
+      - name: {{ .Values.reviews.imagePullSecrets }}

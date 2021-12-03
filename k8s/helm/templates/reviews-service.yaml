@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: bookinfo-dev-reviews
-  namespace: student23-bookinfo-dev
+  name: {{ .Release.Name }}
+  namespace: {{ .Values.reviews.namespace }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.ingress.serviceType }}
   ports:
-  - port: 8082
+  - port: {{ .Values.reviews.port }}
   selector:
-    app: bookinfo-dev-reviews
+    app: {{ .Release.Name }}
